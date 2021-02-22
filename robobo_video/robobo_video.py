@@ -13,8 +13,13 @@ class RoboboVideo:
         self.socket.start_image_thread()
 
     def getImage(self):
-        image, cv2_image, = self.socket.get_image()
+        image, cv2_image,timestamp, sync_id, frame_id = self.socket.get_image()
         return cv2_image
+
+
+    def getImageWithMetadata(self):
+        image, cv2_image,timestamp, sync_id, frame_id = self.socket.get_image()
+        return cv2_image, timestamp, sync_id, frame_id
 
     def disconnect(self):
         self.socket.disconnect()

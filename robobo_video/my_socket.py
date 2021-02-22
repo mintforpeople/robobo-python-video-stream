@@ -18,20 +18,25 @@ class MySocket:
 
         self.imageData = None
         self.threadImage = None
-        self.loss_conextion = False
+        self.lost_conection = False
 
     def __del__(self):
         self.disconnect();
 
     def get_image_aux(self, data):
         np_arr = np.frombuffer(data, np.uint8)
-        cv2_img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+        # Timestamp Data
+        timestamp =int.from_bytes(data[-24:-16], "big", signed=False)
+        sync_id = int.from_bytes(data[-16:-8], "big",signed=True)
+        frame_id = int.from_bytes(data[-8:], "big",signed=True)
+        # Image data
+        cv2_img = cv2.imdecode(np_arr[:-24], cv2.IMREAD_COLOR)
         im_pil = Image.fromarray(cv2_img)
-        return im_pil, cv2_img
+        return im_pil, cv2_img, timestamp, sync_id, frame_id
 
     def get_image(self):
         result = None
-        while result is None and self.loss_conextion is False:
+        while result is None and self.lost_conection is False:
             result = copy.copy(self.imageData)
         return self.get_image_aux(result[1])
 
@@ -40,7 +45,7 @@ class MySocket:
             while True:
                 self.imageData = self.myreceive()
         except:
-            self.loss_conextion = True
+            self.lost_conection = True
 
     def start_image_thread(self):
         self.threadImage = threading.Thread(target=self.receive_images)
@@ -59,7 +64,7 @@ class MySocket:
             MSGLEN = int.from_bytes(self.sock.recv(4), byteorder='big')
             max_try -= 1
         if max_try == 0:
-            raise Exception('Error en la conexio')
+            raise Exception('Conenction error')
         data = b''
         bytes_recd = 0
         while bytes_recd < MSGLEN:
