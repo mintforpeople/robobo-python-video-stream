@@ -1,8 +1,11 @@
 from robobo_video.robobo_video import RoboboVideo
+from robobo.Robobo import Robobo
 import cv2
 
-videoStream = RoboboVideo("192.168.31.241")
-
+videoStream = RoboboVideo("192.168.1.58")
+rob = Robobo("192.168.1.58")
+rob.connect()
+rob.startStream()
 def main():
     print("Starting test app")
 
@@ -20,7 +23,7 @@ def main():
             print(timestamp)
             print(sync_id)
             print(frame_id)
-            cv2.imshow('smartphone camera', frame)
+        cv2.imshow('smartphone camera', frame)
 
         last_ts = timestamp
         if cv2.waitKey(1) & 0xFF == ord('q'):
