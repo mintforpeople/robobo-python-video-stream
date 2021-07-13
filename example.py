@@ -1,4 +1,4 @@
-from robobo_video.robobo_video import RoboboVideo
+from robobopy_videostream.RoboboVideo import RoboboVideo
 from robobo.Robobo import Robobo
 import cv2
 

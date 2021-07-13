@@ -1,4 +1,4 @@
-from robobo_video.my_socket import MySocket
+from robobopy_videostream.my_socket import MySocket
 
 
 class RoboboVideo:
