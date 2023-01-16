@@ -3,8 +3,8 @@ from robobopy_videostream.my_socket import MySocket
 
 class RoboboVideo:
 
-    def __init__(self, ip):
-        self.port = 40405
+    def __init__(self, ip, robot_id=0):
+        self.port = 40405 + (robot_id * 10)
         self.ip = ip
         self.socket = MySocket()
 
