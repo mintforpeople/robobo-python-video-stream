@@ -1,5 +1,5 @@
 from robobopy_videostream.RoboboVideo import RoboboVideo
-from robobo.Robobo import Robobo
+from robobopy.Robobo import Robobo
 import cv2
 
 videoStream = RoboboVideo("192.168.1.58")
