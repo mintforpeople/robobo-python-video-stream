@@ -16,7 +16,8 @@ pip install robobopy_videostream
 The following script shows an example of the basic usage of this library:
 
 ``` python
-from robobo_videostream.RoboboVideo import RoboboVideo
+from robobopy.Robobo import Robobo
+from robobopy_videostream.RoboboVideo import RoboboVideo
 import cv2
 
 #The IP must be that shown in the Robobo app
