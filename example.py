@@ -1,35 +1,52 @@
 from robobopy_videostream.RoboboVideo import RoboboVideo
 from robobopy.Robobo import Robobo
 import cv2
+import signal
+import sys
 
-videoStream = RoboboVideo("192.168.1.58")
-rob = Robobo("192.168.1.58")
-rob.connect()
-rob.startStream()
+IP = "YOUR_IP_GOES_HERE"
+rob = Robobo(IP)
+videoStream = RoboboVideo(IP)
+
+def cleanup():
+    try:
+        videoStream.disconnect()
+    except:
+        pass
+    try:
+        rob.disconnect()
+    except:
+        pass
+    cv2.destroyAllWindows()
+    print("Exited cleanly.")
+    sys.exit(0)
+
+def signal_handler(sig, frame):
+    cleanup()
+
+signal.signal(signal.SIGINT, signal_handler)
+
 def main():
     print("Starting test app")
 
+    rob.connect()
     videoStream.connect()
+    rob.startStream()
 
     print("Showing images")
-    #rob.setLaneColorInversion(False)
     i = 0
     last_ts = 0
     while True:
-        i+=1
+        i += 1
         frame, timestamp, sync_id, frame_id = videoStream.getImageWithMetadata()
-
         if timestamp != last_ts:
-            print(timestamp)
-            print(sync_id)
-            print(frame_id)
+            print(timestamp, frame_id, sync_id)
         cv2.imshow('smartphone camera', frame)
-
-        last_ts = timestamp
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            videoStream.disconnect()
-            cv2.destroyAllwindows()
+        key = cv2.waitKey(1) & 0xFF
+        if key == 27:  # Escape key
             break
+        last_ts = timestamp
+    cleanup()
 
-
-main()
+if __name__ == "__main__":
+    main()
