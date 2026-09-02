@@ -1,6 +1,6 @@
 # robobo-python-video-stream
 
-This library is required to use the video streaming from the Smartphone's camera in the Robobo.py library. It only runs in Android operating system.
+This library is required to use the video streaming from the Smartphone's camera in the Robobo.py library. It only works with the Robobo Android App.
 
 ## Installation
 
