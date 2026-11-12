@@ -1,4 +1,5 @@
 import copy
+import time
 import socket as so
 import threading
 import cv2
@@ -19,43 +20,71 @@ class MySocket:
         self.imageData = None
         self.threadImage = None
         self.lost_conection = False
+        self.new_frame_event = threading.Event()
 
     def __del__(self):
-        self.disconnect();
+        self.disconnect()
 
     def get_image_aux(self, data):
-        np_arr = np.frombuffer(data, np.uint8)
-        # Timestamp Data
-        timestamp =int.from_bytes(data[-24:-16], "big", signed=False)
-        sync_id = int.from_bytes(data[-16:-8], "big",signed=True)
-        frame_id = int.from_bytes(data[-8:], "big",signed=True)
-        # Image data
-        cv2_img = cv2.imdecode(np_arr[:-24], cv2.IMREAD_COLOR)
-        im_pil = Image.fromarray(cv2_img)
-        return im_pil, cv2_img, timestamp, sync_id, frame_id
+        if not data or len(data) < 24:
+            return None, None, 0, 0, 0
+        try:
+            np_arr = np.frombuffer(data, np.uint8)
+            # Timestamp Data
+            timestamp = int.from_bytes(data[-24:-16], "big", signed=False)
+            sync_id = int.from_bytes(data[-16:-8], "big", signed=True)
+            frame_id = int.from_bytes(data[-8:], "big", signed=True)
+            # Image data
+            cv2_img = cv2.imdecode(np_arr[:-24], cv2.IMREAD_COLOR)
+            im_pil = Image.fromarray(cv2_img) if cv2_img is not None else None
+            return im_pil, cv2_img, timestamp, sync_id, frame_id
+        except Exception:
+            return None, None, 0, 0, 0
 
-    def get_image(self):
-        result = None
-        while result is None and self.lost_conection is False:
-            result = copy.copy(self.imageData)
+    def get_image(self, timeout=2.0):
+        if self.lost_conection:
+            return None, None, 0, 0, 0
+
+        # Wait for a fresh frame to arrive from the network thread
+        got_frame = self.new_frame_event.wait(timeout=timeout)
+        self.new_frame_event.clear()
+
+        if not got_frame or self.lost_conection:
+            return None, None, 0, 0, 0
+
+        result = self.imageData
+        if result is None or len(result) < 2:
+            return None, None, 0, 0, 0
+
         return self.get_image_aux(result[1])
 
     def receive_images(self):
         try:
-            while True:
+            while not self.lost_conection:
                 self.imageData = self.myreceive()
-        except:
+                self.new_frame_event.set()
+        except Exception:
             self.lost_conection = True
+            self.new_frame_event.set()
 
     def start_image_thread(self):
-        self.threadImage = threading.Thread(target=self.receive_images)
+        self.threadImage = threading.Thread(target=self.receive_images, daemon=True)
         self.threadImage.start()
 
     def connect(self, host, port):
         self.sock.connect((host, port))
 
     def disconnect(self):
-        self.sock.close()
+        self.lost_conection = True
+        self.new_frame_event.set()
+        try:
+            self.sock.shutdown(so.SHUT_RDWR)
+        except Exception:
+            pass
+        try:
+            self.sock.close()
+        except Exception:
+            pass
 
     def myreceive(self):
         MSGLEN = 0

@@ -17,12 +17,16 @@ class RoboboVideo:
         self.socket.start_image_thread()
 
     def getImage(self):
-        image, cv2_image,timestamp, sync_id, frame_id = self.socket.get_image()
-        return cv2_image
+        res = self.socket.get_image()
+        if res is not None and len(res) >= 2:
+            return res[1]
+        return None
 
     def getImageWithMetadata(self):
-        image, cv2_image,timestamp, sync_id, frame_id = self.socket.get_image()
-        return cv2_image, timestamp, sync_id, frame_id
+        res = self.socket.get_image()
+        if res is not None and len(res) >= 5:
+            return res[1], res[2], res[3], res[4]
+        return None, 0, 0, 0
     
     def takePictures(self, count=1, delay=0, interval=1, save_path=None):
         if save_path is None:
